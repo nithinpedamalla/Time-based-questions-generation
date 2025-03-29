@@ -241,40 +241,81 @@ app.get("/chapters/:subject", async (req, res) => {
 //     }
 //   });
   
+// app.get("/questions/:subjects/:chapters/:limit", async (req, res) => {
+//     try {
+//       const subjects = req.params.subjects.split(",").map(s => s.toLowerCase().trim());
+//       const chapters = req.params.chapters.split(",").map(c => c.toLowerCase().trim());
+//       const limit = parseInt(req.params.limit);
+  
+//       // Get available subjects and chapters for debugging
+//       const availableSubjects = await Question.distinct("subject");
+//       const availableChapters = await Question.distinct("chapter");
+  
+//       const questions = await Question.aggregate([
+//         { 
+//           $match: { 
+//             subject: { $in: subjects },
+//             chapter: { $in: chapters }
+//           } 
+//         },
+//         { $sample: { size: limit } }
+//       ]);
+  
+//       if (questions.length === 0) {
+//         return res.status(404).json({ 
+//           message: "No questions found",
+//           requested: { subjects, chapters },
+//           available: { subjects: availableSubjects, chapters: availableChapters }
+//         });
+//       }
+  
+//       res.json(questions);
+//     } catch (error) {
+//       console.error("Error:", error);
+//       res.status(500).json({ error: "Server error" });
+//     }
+//   });
+
 app.get("/questions/:subjects/:chapters/:limit", async (req, res) => {
-    try {
+  try {
       const subjects = req.params.subjects.split(",").map(s => s.toLowerCase().trim());
       const chapters = req.params.chapters.split(",").map(c => c.toLowerCase().trim());
       const limit = parseInt(req.params.limit);
-  
-      // Get available subjects and chapters for debugging
+
+      console.log("Requested Subjects:", subjects);
+      console.log("Requested Chapters:", chapters);
+
       const availableSubjects = await Question.distinct("subject");
       const availableChapters = await Question.distinct("chapter");
-  
+
+      console.log("Available Subjects in DB:", availableSubjects);
+      console.log("Available Chapters in DB:", availableChapters);
+
       const questions = await Question.aggregate([
-        { 
-          $match: { 
-            subject: { $in: subjects },
-            chapter: { $in: chapters }
-          } 
-        },
-        { $sample: { size: limit } }
+          {
+              $match: {
+                  subject: { $in: subjects },
+                  chapter: { $in: chapters }
+              }
+          },
+          { $sample: { size: limit } }
       ]);
-  
+
       if (questions.length === 0) {
-        return res.status(404).json({ 
-          message: "No questions found",
-          requested: { subjects, chapters },
-          available: { subjects: availableSubjects, chapters: availableChapters }
-        });
+          return res.status(404).json({
+              message: "No questions found",
+              requested: { subjects, chapters },
+              available: { subjects: availableSubjects, chapters: availableChapters }
+          });
       }
-  
+
       res.json(questions);
-    } catch (error) {
-      console.error("Error:", error);
+  } catch (error) {
+      console.error("Error fetching questions:", error);
       res.status(500).json({ error: "Server error" });
-    }
-  });
+  }
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT} + ${process.env.MONGO_URI}`));
